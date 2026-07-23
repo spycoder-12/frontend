@@ -255,7 +255,7 @@ header{
             HERO
 ==========================================*/
 
-.hero{
+/* .hero{
 
     position:relative;
     height:100vh;
@@ -265,6 +265,16 @@ header{
     text-align:center;
     background:url("images/hero.jpg") center/cover no-repeat;
 
+} */
+
+.hero{
+    position:relative;
+    height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    text-align:center;
+    background: linear-gradient(135deg, #1a1a1a, #000);
 }
 
 .hero-overlay{
