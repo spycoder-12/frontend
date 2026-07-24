@@ -3,6 +3,7 @@
 // =====================================================*/
 
 // const gallery = document.getElementById("gallery");
+// const reelsGallery = document.getElementById("reelsGallery");
 // const contactForm = document.getElementById("contactForm");
 
 // const adminBtn = document.getElementById("adminBtn");
@@ -13,8 +14,10 @@
 // const adminLoginForm = document.getElementById("adminLoginForm");
 
 // const uploadForm = document.getElementById("uploadForm");
+// const uploadReelForm = document.getElementById("uploadReelForm");
 
 // const photoTableBody = document.getElementById("photoTableBody");
+// const reelTableBody = document.getElementById("reelTableBody");
 // const contactTableBody = document.getElementById("contactTableBody");
 
 // const loader = document.getElementById("loader");
@@ -27,6 +30,7 @@
 // const scrollTopBtn = document.getElementById("scrollTop");
 
 // let photos = [];
+// let reels = [];
 // let contacts = [];
 // let selectedDeleteId = null;
 // let deleteType = "";
@@ -128,6 +132,37 @@
 
 
 // /*=====================================================
+//             FETCH REELS
+// =====================================================*/
+
+// async function loadReels() {
+
+//     try {
+
+//         const response = await fetch(`${API_BASE}/reels`);
+
+//         reels = await response.json();
+
+//         renderReelsGallery(reels);
+
+//         renderReelTable(reels);
+
+//         document.getElementById("totalReels").innerText = reels.length;
+
+//     }
+
+//     catch (error) {
+
+//         console.log(error);
+
+//         showToast("Unable to load reels", false);
+
+//     }
+
+// }
+
+
+// /*=====================================================
 //             GALLERY
 // =====================================================*/
 
@@ -177,6 +212,55 @@
 //         card.appendChild(overlay);
 
 //         gallery.appendChild(card);
+
+//     });
+
+// }
+
+
+// /*=====================================================
+//             REELS GALLERY (PUBLIC)
+// =====================================================*/
+
+// function renderReelsGallery(data) {
+
+//     reelsGallery.innerHTML = "";
+
+//     if (data.length === 0) {
+
+//         reelsGallery.innerHTML = `
+//             <div class="empty-state">
+//                 <h2>No Reels Available</h2>
+//             </div>
+//         `;
+
+//         return;
+
+//     }
+
+//     data.forEach(reel => {
+
+//         const card = document.createElement("div");
+//         card.className = "photo-card";
+
+//         const video = document.createElement("video");
+//         video.src = API_BASE + "/uploads/" + reel.video_path;
+//         video.controls = true;
+//         video.playsInline = true;
+//         video.preload = "metadata";
+
+//         const overlay = document.createElement("div");
+//         overlay.className = "photo-overlay";
+
+//         const p = document.createElement("p");
+//         p.textContent = reel.caption ?? "";
+
+//         overlay.appendChild(p);
+
+//         card.appendChild(video);
+//         card.appendChild(overlay);
+
+//         reelsGallery.appendChild(card);
 
 //     });
 
@@ -439,10 +523,63 @@
 
 
 // /*=====================================================
+//             CHANGE PASSWORD
+// =====================================================*/
+
+// document.getElementById("changePasswordForm").addEventListener("submit", async function (e) {
+
+//     e.preventDefault();
+
+//     const current_password = document.getElementById("currentPassword").value;
+//     const new_password = document.getElementById("newPassword").value;
+
+//     try {
+
+//         const response = await fetch(`${API_BASE}/admin/change-password`, {
+
+//             method: "POST",
+
+//             headers: {
+//                 "Content-Type": "application/json",
+//                 ...authHeaders()
+//             },
+
+//             body: JSON.stringify({ current_password, new_password })
+
+//         });
+
+//         const result = await response.json();
+
+//         if (!response.ok) {
+
+//             showToast(result.detail || "Unable to update password", false);
+//             return;
+
+//         }
+
+//         showToast(result.message);
+
+//         this.reset();
+
+//     }
+
+//     catch (error) {
+
+//         console.log(error);
+
+//         showToast("Server Error", false);
+
+//     }
+
+// });
+
+
+// /*=====================================================
 //             INITIAL LOAD
 // =====================================================*/
 
 // loadPhotos();
+// loadReels();
 
 // /*=====================================================
 //             PHOTO TABLE
@@ -788,6 +925,193 @@
 // });
 
 // /*=====================================================
+//             REEL TABLE
+// =====================================================*/
+
+// function renderReelTable(data) {
+
+//     reelTableBody.innerHTML = "";
+
+//     data.forEach(reel => {
+
+//         reelTableBody.innerHTML += `
+
+//         <tr>
+
+//             <td>${reel.id}</td>
+
+//             <td>
+//                 <video
+//                     src="${API_BASE}/uploads/${reel.video_path}"
+//                     style="width:160px;height:auto;"
+//                     controls
+//                     preload="none">
+//                 </video>
+//             </td>
+
+//             <td>${escapeHtml(reel.caption)}</td>
+
+//             <td>${reel.sort_order}</td>
+
+//             <td>
+//                 <button
+//                     class="delete-btn"
+//                     onclick="deleteReel(${reel.id})">
+
+//                     Delete
+
+//                 </button>
+//             </td>
+
+//         </tr>
+
+//         `;
+
+//     });
+
+// }
+
+
+// /*=====================================================
+//                 UPLOAD REEL
+// =====================================================*/
+
+// uploadReelForm.addEventListener("submit", async function (e) {
+
+//     e.preventDefault();
+
+//     const formData = new FormData();
+
+//     formData.append(
+//         "caption",
+//         document.getElementById("reelCaption").value
+//     );
+
+//     formData.append(
+//         "sort_order",
+//         document.getElementById("reelSortOrder").value || "0"
+//     );
+
+//     formData.append(
+//         "video",
+//         document.getElementById("reelVideo").files[0]
+//     );
+
+//     try {
+
+//         const response = await fetch(
+//             `${API_BASE}/reels/upload`,
+//             {
+
+//                 method: "POST",
+
+//                 headers: authHeaders(),
+
+//                 body: formData
+
+//             }
+
+//         );
+
+//         const result = await response.json();
+
+//         if (result.success) {
+
+//             showToast(result.message);
+
+//             uploadReelForm.reset();
+
+//             loadReels();
+
+//         }
+
+//         else {
+
+//             showToast("Upload Failed", false);
+
+//         }
+
+//     }
+
+//     catch (error) {
+
+//         console.log(error);
+
+//         showToast("Server Error", false);
+
+//     }
+
+// });
+
+
+// /*=====================================================
+//                 DELETE REEL
+// =====================================================*/
+
+// async function deleteReel(id) {
+
+//     if (!confirm("Delete this reel?")) return;
+
+//     try {
+
+//         const response = await fetch(
+
+//             `${API_BASE}/reels/${id}`,
+
+//             {
+
+//                 method: "DELETE",
+
+//                 headers: authHeaders()
+
+//             }
+
+//         );
+
+//         const result = await response.json();
+
+//         showToast(result.message);
+
+//         loadReels();
+
+//     }
+
+//     catch (err) {
+
+//         console.log(err);
+
+//         showToast("Delete Failed", false);
+
+//     }
+
+// }
+
+
+// /*=====================================================
+//             REEL SEARCH
+// =====================================================*/
+
+// document
+// .getElementById("reelSearch")
+// .addEventListener(
+
+// "keyup",
+
+// function(){
+
+// const keyword=this.value.toLowerCase();
+
+// const filtered=reels.filter(reel=>
+
+// (reel.caption||"").toLowerCase().includes(keyword)
+
+// );
+
+// renderReelTable(filtered);
+
+// });
+
+// /*=====================================================
 //                 LOAD CONTACTS
 // =====================================================*/
 
@@ -1119,17 +1443,15 @@
 
 //     loadPhotos();
 
+//     loadReels();
+
 //     tryAutoLogin();
 
 // });
 
 
-// console.log("Photography Portfolio Loaded Successfully");
+// ================================================================================================================================================================================================
 
-
-/*=====================================================
-            CONFIG & GLOBAL VARIABLES
-=====================================================*/
 
 const gallery = document.getElementById("gallery");
 const reelsGallery = document.getElementById("reelsGallery");
@@ -1163,6 +1485,7 @@ let reels = [];
 let contacts = [];
 let selectedDeleteId = null;
 let deleteType = "";
+let activeCategory = "all";
 
 let adminToken = localStorage.getItem("adminToken") || null;
 
@@ -1241,7 +1564,7 @@ async function loadPhotos() {
 
         photos = await response.json();
 
-        renderGallery(photos);
+        applyGalleryFilter();
 
         renderPhotoTable(photos);
 
@@ -1292,6 +1615,30 @@ async function loadReels() {
 
 
 /*=====================================================
+            GALLERY FILTERING (instant, no reload)
+=====================================================*/
+
+function applyGalleryFilter() {
+
+    if (activeCategory === "all") {
+
+        renderGallery(photos);
+        return;
+
+    }
+
+    const filtered = photos.filter(photo =>
+
+        (photo.category || "").trim().toLowerCase() === activeCategory.trim().toLowerCase()
+
+    );
+
+    renderGallery(filtered);
+
+}
+
+
+/*=====================================================
             GALLERY
 =====================================================*/
 
@@ -1319,6 +1666,8 @@ function renderGallery(data) {
         const img = document.createElement("img");
         img.src = API_BASE + "/uploads/" + photo.image_path;
         img.alt = photo.caption ?? "";
+        img.loading = "lazy";
+        img.decoding = "async";
         img.onclick = function () { openLightbox(img.src, photo.caption ?? ""); };
 
         const overlay = document.createElement("div");
@@ -1370,24 +1719,80 @@ function renderReelsGallery(data) {
     data.forEach(reel => {
 
         const card = document.createElement("div");
-        card.className = "photo-card";
+        card.className = "reel-card";
 
         const video = document.createElement("video");
         video.src = API_BASE + "/uploads/" + reel.video_path;
-        video.controls = true;
         video.playsInline = true;
         video.preload = "metadata";
+        video.muted = true;
 
-        const overlay = document.createElement("div");
-        overlay.className = "photo-overlay";
-
-        const p = document.createElement("p");
-        p.textContent = reel.caption ?? "";
-
-        overlay.appendChild(p);
+        const playBtn = document.createElement("div");
+        playBtn.className = "reel-play-btn";
+        playBtn.innerHTML = '<i class="ri-play-fill"></i>';
 
         card.appendChild(video);
+        card.appendChild(playBtn);
+
+        const overlay = document.createElement("div");
+        overlay.className = "reel-overlay";
+
+        if (reel.category) {
+
+            const category = document.createElement("span");
+            category.className = "reel-category";
+            category.textContent = reel.category;
+            overlay.appendChild(category);
+
+        }
+
+        if (reel.title) {
+
+            const title = document.createElement("div");
+            title.className = "reel-title";
+            title.textContent = reel.title;
+            overlay.appendChild(title);
+
+        }
+
+        const caption = document.createElement("div");
+        caption.className = "reel-caption";
+        caption.textContent = reel.caption ?? "";
+        overlay.appendChild(caption);
+
+        if (reel.created_at) {
+
+            const date = document.createElement("span");
+            date.className = "reel-date";
+            date.textContent = new Date(reel.created_at).toLocaleDateString();
+            overlay.appendChild(date);
+
+        }
+
         card.appendChild(overlay);
+
+        card.addEventListener("click", () => {
+
+            if (video.paused) {
+
+                video.controls = true;
+                video.muted = false;
+                video.play();
+                card.classList.add("playing");
+
+            }
+
+            else {
+
+                video.pause();
+                card.classList.remove("playing");
+
+            }
+
+        });
+
+        video.addEventListener("pause", () => card.classList.remove("playing"));
+        video.addEventListener("ended", () => card.classList.remove("playing"));
 
         reelsGallery.appendChild(card);
 
@@ -1443,25 +1848,9 @@ document.querySelectorAll(".filter").forEach(button => {
 
         button.classList.add("active");
 
-        const category = button.dataset.category;
+        activeCategory = button.dataset.category;
 
-        if (category === "all") {
-
-            renderGallery(photos);
-
-        }
-
-        else {
-
-            const filtered = photos.filter(photo =>
-
-                photo.category.toLowerCase() === category.toLowerCase()
-
-            );
-
-            renderGallery(filtered);
-
-        }
+        applyGalleryFilter();
 
     };
 
@@ -1704,13 +2093,6 @@ document.getElementById("changePasswordForm").addEventListener("submit", async f
 
 
 /*=====================================================
-            INITIAL LOAD
-=====================================================*/
-
-loadPhotos();
-loadReels();
-
-/*=====================================================
             PHOTO TABLE
 =====================================================*/
 
@@ -1728,17 +2110,17 @@ function renderPhotoTable(data) {
 
             <td>
 
-                <img src="${API_BASE}/uploads/${photo.image_path}">
+                <img src="${API_BASE}/uploads/${photo.image_path}" loading="lazy">
 
             </td>
 
-            <td>${photo.category}</td>
+            <td>${escapeHtml(photo.category)}</td>
 
-            <td>${photo.caption ?? ""}</td>
+            <td>${escapeHtml(photo.caption ?? "")}</td>
 
-            <td>${photo.frame_no ?? ""}</td>
+            <td>${escapeHtml(photo.frame_no ?? "")}</td>
 
-            <td>${photo.exposure ?? ""}</td>
+            <td>${escapeHtml(photo.exposure ?? "")}</td>
 
             <td>${photo.sort_order}</td>
 
@@ -2078,6 +2460,8 @@ function renderReelTable(data) {
                 </video>
             </td>
 
+            <td>${escapeHtml(reel.category ?? "")}</td>
+
             <td>${escapeHtml(reel.caption)}</td>
 
             <td>${reel.sort_order}</td>
@@ -2110,6 +2494,16 @@ uploadReelForm.addEventListener("submit", async function (e) {
     e.preventDefault();
 
     const formData = new FormData();
+
+    formData.append(
+        "category",
+        document.getElementById("reelCategory").value
+    );
+
+    formData.append(
+        "title",
+        document.getElementById("reelTitle").value
+    );
 
     formData.append(
         "caption",
@@ -2232,7 +2626,9 @@ const keyword=this.value.toLowerCase();
 
 const filtered=reels.filter(reel=>
 
-(reel.caption||"").toLowerCase().includes(keyword)
+(reel.caption||"").toLowerCase().includes(keyword) ||
+
+(reel.category||"").toLowerCase().includes(keyword)
 
 );
 
@@ -2565,7 +2961,10 @@ loading.classList.add("hidden");
 
 
 /*=====================================================
-            INITIALIZE
+            INITIALIZE (single entry point —
+            avoids the duplicate photos/reels
+            fetch that ran both at script load
+            and again on DOMContentLoaded)
 =====================================================*/
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -2580,3 +2979,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 console.log("Photography Portfolio Loaded Successfully");
+
+
+// console.log("Photography Portfolio Loaded Successfully");
