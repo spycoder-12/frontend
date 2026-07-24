@@ -1453,6 +1453,7 @@
 // ================================================================================================================================================================================================
 
 
+
 const gallery = document.getElementById("gallery");
 const reelsGallery = document.getElementById("reelsGallery");
 const contactForm = document.getElementById("contactForm");
@@ -1639,6 +1640,54 @@ function applyGalleryFilter() {
 
 
 /*=====================================================
+            MEDIA FRAME SIZING (landscape vs portrait)
+
+            Photo and reel cards have a fixed row HEIGHT
+            (set in CSS, changes per breakpoint) but their
+            WIDTH is computed here from the media's own
+            aspect ratio, so a landscape upload keeps its
+            landscape shape and a portrait upload keeps
+            its portrait shape — instead of every item
+            being force-cropped into one fixed frame.
+=====================================================*/
+
+function applyMediaFrameWidth(card, ratio) {
+
+    if (!ratio || !isFinite(ratio)) return;
+
+    const height = card.clientHeight || parseFloat(getComputedStyle(card).height);
+
+    let width = height * ratio;
+
+    const min = 140;
+    const max = 640;
+
+    width = Math.max(min, Math.min(max, width));
+
+    card.style.width = width + "px";
+
+}
+
+let mediaResizeTimer;
+
+window.addEventListener("resize", () => {
+
+    clearTimeout(mediaResizeTimer);
+
+    mediaResizeTimer = setTimeout(() => {
+
+        document.querySelectorAll(".photo-card[data-ratio], .reel-card[data-ratio]").forEach(card => {
+
+            applyMediaFrameWidth(card, parseFloat(card.dataset.ratio));
+
+        });
+
+    }, 150);
+
+});
+
+
+/*=====================================================
             GALLERY
 =====================================================*/
 
@@ -1669,6 +1718,23 @@ function renderGallery(data) {
         img.loading = "lazy";
         img.decoding = "async";
         img.onclick = function () { openLightbox(img.src, photo.caption ?? ""); };
+
+        // Size the card to the image's own aspect ratio (landscape stays
+        // landscape, portrait stays portrait) instead of forcing every
+        // photo into one fixed portrait-ish box.
+        if (img.complete && img.naturalWidth) {
+
+            applyMediaFrameWidth(card, img.naturalWidth / img.naturalHeight);
+
+        }
+
+        img.addEventListener("load", () => {
+
+            const ratio = img.naturalWidth / img.naturalHeight;
+            card.dataset.ratio = ratio;
+            applyMediaFrameWidth(card, ratio);
+
+        });
 
         const overlay = document.createElement("div");
         overlay.className = "photo-overlay";
@@ -1726,6 +1792,14 @@ function renderReelsGallery(data) {
         video.playsInline = true;
         video.preload = "metadata";
         video.muted = true;
+
+        video.addEventListener("loadedmetadata", () => {
+
+            const ratio = video.videoWidth / video.videoHeight;
+            card.dataset.ratio = ratio;
+            applyMediaFrameWidth(card, ratio);
+
+        });
 
         const playBtn = document.createElement("div");
         playBtn.className = "reel-play-btn";
@@ -2979,6 +3053,3 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 console.log("Photography Portfolio Loaded Successfully");
-
-
-// console.log("Photography Portfolio Loaded Successfully");
